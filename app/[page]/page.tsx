@@ -9,18 +9,18 @@ export default function Page() {
 
   useEffect(() => {
     findLinkByShortURL(page).then((data:any) => {
+      //alert(data);
       if (data != undefined) {
         // Redirect to the original URL
         updateClickCount(data.uuid).then(() => {
+
+        }).finally(() => {
           window.location.href = /^https?:\/\//i.test(data.url) ? data.url : `https://${data.url}`;
         });
       }
-    }).catch((err) => {
-      console.error("Error finding link:", err);
-      window.location.href = "/"
-    }).finally(() => {
-      window.location.href = "/"
-    });
+      else if(data == undefined)
+        window.location.href = "/";
+    })
   }, []);
 
   return (
