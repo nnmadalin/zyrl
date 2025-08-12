@@ -38,7 +38,7 @@ Zyrl is a modern, fast, and scalable URL shortener built with Next.js. It allows
 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/zyrl.git
+git clone https://github.com/nnmadalin/zyrl
 cd zyrl
 ```
 
