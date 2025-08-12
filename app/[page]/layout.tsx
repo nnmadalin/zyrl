@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -11,7 +10,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
 export const metadata: Metadata = {
   title: "ZYRL | Shorten your links",
   icons: {
@@ -19,6 +17,7 @@ export const metadata: Metadata = {
   },
   description: "Paste a link, add an optional alias and get a short URL with analytics and QR code",
 };
+
 
 export default function RootLayout({
   children,
@@ -28,7 +27,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}

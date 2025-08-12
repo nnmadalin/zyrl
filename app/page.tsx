@@ -4,7 +4,9 @@ import Image from "next/image";
 import logoImg from "@/public/logo.png"
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { addLinkToLocalStorage, addLinkToSupabase, extractDataLocalStorage, findExistAliasName, isValidURL } from "./functions";
+import { useQRCode } from 'next-qrcode';
+
+import { addLinkToLocalStorage, addLinkToSupabase, deleteLinkLocalStorage, deleteLinkSupabase, extractDataLocalStorage, findExistAliasName, isValidURL } from "./functions";
 
 export default function Home() {
 
@@ -12,22 +14,112 @@ export default function Home() {
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [url, setUrl] = useState("");
   const [custom, setCustom] = useState("");
-
+  const [reloadFlag, setReloadFlag] = useState(0);
   const [links, setLinks] = useState([]);
+
+  const { Canvas } = useQRCode();
+
+
 
   useEffect(() => {
     setLoadingLinks(true);
     async function loadLinks() {
-      const data:any = await extractDataLocalStorage();
+      const data: any = await extractDataLocalStorage();
       setLinks(data);
       setLoadingLinks(false);
     }
 
     loadLinks();
 
-  }, []);
+  }, [reloadFlag]);
 
+  function copyLink(link: string) {
+    navigator.clipboard.writeText(link).then(() => {
+      toast.success("Link copied to clipboard!");
+    }).catch((err) => {
+      toast.error("Failed to copy link.");
+    });
+  }
+  function shareLink(link: string) {
+    navigator.share({
+      title: 'ZYRL | Check out this link!',
 
+      url: link
+    }).then(() => {
+      toast.success("Link shared successfully!");
+    });
+  }
+
+  function deleteLink(uuid: string) {
+    deleteLinkSupabase(uuid).then(() => {
+      deleteLinkLocalStorage(uuid);
+      setLinks((prevLinks) => prevLinks.filter((link: any) => link.uuid !== uuid));
+      toast.success("Link deleted successfully!");
+      setReloadFlag(prev => prev + 1);
+    });
+  }
+
+  function QRCodeToast({ link, toastId }: { link: string; toastId: string }) {
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        toast.dismiss(toastId);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }, [toastId]);
+
+    return (
+      <div
+        style={{
+          backgroundColor: "rgba(100, 100, 100, 0.5)",
+          padding: 30,
+          borderRadius: 8,
+          color: "white",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          minWidth: 200,
+        }}
+      >
+        <button
+          onClick={() => toast.dismiss(toastId)}
+          style={{
+            position: "absolute",
+            top: 2,
+            right: 8,
+            background: "transparent",
+            border: "none",
+            color: "white",
+            fontSize: 30,
+            cursor: "pointer",
+          }}
+          className="hover:scale-105"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        <Canvas
+          text={link}
+          options={{
+            errorCorrectionLevel: "L",
+            margin: 1,
+            scale: 5,
+            width: 250,
+            color: {
+              dark: "#000000",
+              light: "#ffffff",
+            },
+          }}
+        />
+      </div>
+    );
+  }
+
+  function generateQRCode(link: string) {
+    toast.custom((t) => <QRCodeToast link={link} toastId={t.id} />);
+  }
 
   function submitUrl(e: any) {
     e.preventDefault();
@@ -40,17 +132,21 @@ export default function Home() {
       }
       return result;
     };
-    
+
     isValid(url).then((valid) => {
       if (valid) {
-        
-        
-        if(custom.trim() != "" && custom.trim().length < 3) {
+
+        if (custom.trim() != "" && custom.trim().length < 3) {
           toast.error("Custom alias must be at least 3 characters long!");
           setLoading(false);
           return;
         }
-        else if(custom.trim() != "" && custom.trim().length >= 3){
+        else if (custom.trim() != "" && custom.trim().length > 15) {
+          toast.error("Custom alias must be at most 15 characters long!");
+          setLoading(false);
+          return;
+        }
+        else if (custom.trim() != "" && custom.trim().length >= 3) {
           findExistAliasName(custom.trim()).then((exists) => {
             if (exists) {
               toast.error("Custom alias already exists! Please choose another.");
@@ -61,11 +157,14 @@ export default function Home() {
         }
 
         //insert into supabase
-        addLinkToSupabase(url, custom.trim()).then((data:any) => {
+        addLinkToSupabase(url, custom.trim()).then((data: any) => {
           if (data) {
             console.log("Link added to Supabase:", data);
             addLinkToLocalStorage(data?.uuid);
+            setUrl("");
+            setCustom("");
             toast.success("Link shortened successfully!");
+            setReloadFlag(prev => prev + 1);
           }
         });
 
@@ -138,21 +237,21 @@ export default function Home() {
           </div>
 
           <div className="w-full space-y-3">
-            {links.map((l:any) => (
+            {links.map((l: any) => (
               <div key={l.uuid} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border border-gray-400 rounded-lg p-3">
                 <div className="flex-1">
                   <div className="text-sm text-gray-700 truncate">{l.url}</div>
                   <div className="text-xs text-indigo-600 mt-1 flex items-center gap-2">
-                    <span className="font-mono">{l.short_url}</span>
-                    <button className="text-xs underline cursor-pointer">Copy</button>
+                    <span className="font-mono" >{process.env.NEXT_PUBLIC_URL! + "/" + l.short_url}</span>
+                    <button className="text-xs underline cursor-pointer" onClick={() => copyLink(process.env.NEXT_PUBLIC_URL! + "/" + l.short_url)}>Copy</button>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="text-sm text-gray-500">Clicks: <span className="font-semibold text-gray-700">{l.clicks}</span></div>
-                  <button className="px-3 py-1 border rounded text-sm border-gray-400 cursor-pointer hover:border-gray-600 transition-all duration-100">QR</button>
-                  <button className="px-3 py-1 border rounded text-sm border-gray-400 cursor-pointer hover:border-gray-600 transition-all duration-100">Share</button>
-                  <button className="px-3 py-1 border rounded text-sm border-gray-400 cursor-pointer hover:border-gray-600 transition-all duration-100">Delete</button>
+                  <button className="px-3 py-1 border rounded text-sm border-gray-400 cursor-pointer hover:border-gray-600 transition-all duration-100" onClick={() => generateQRCode(process.env.NEXT_PUBLIC_URL! + "/" + l.short_url)}>QR</button>
+                  <button className="px-3 py-1 border rounded text-sm border-gray-400 cursor-pointer hover:border-gray-600 transition-all duration-100" onClick={() => shareLink(process.env.NEXT_PUBLIC_URL! + "/" + l.short_url)}>Share</button>
+                  <button className="px-3 py-1 border rounded text-sm border-gray-400 cursor-pointer hover:border-gray-600 transition-all duration-100" onClick={() => deleteLink(l.uuid)}>Delete</button>
                 </div>
               </div>
             ))}

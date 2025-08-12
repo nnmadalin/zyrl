@@ -61,7 +61,7 @@ export async function extractDataLocalStorage() {
  * Function isValidURL
  */
 
-export async function isValidURL(url:string) {
+export async function isValidURL(url: string) {
     const urlPattern = /^(https?:\/\/)?((?!localhost)[\w.-]+)\.([a-z]{2,})(:\d{1,5})?(\/.*)?$/i;
     let urlRegex = new RegExp(urlPattern);
 
@@ -114,4 +114,84 @@ export async function addLinkToSupabase(url: string, alias: string) {
         return null;
     }
     return data[0];
+}
+
+
+/**
+ * Function findLinkByShortURL
+ */
+export async function findLinkByShortURL(short_url: any) {
+    const { data, error } = await supabase
+        .from('shortUrl')
+        .select('*')
+        .eq('short_url', short_url);
+
+    if (error) {
+        console.error(error);
+        return null;
+    }
+    return data[0];
+}
+
+
+/**
+ * Function updateClickCount
+ */
+export async function updateClickCount(uuid: string) {
+    const { data: current, error: selectError } = await supabase
+        .from('shortUrl')
+        .select('clicks')
+        .eq('uuid', uuid)
+        .single();
+
+    if (selectError) {
+        console.error('Select error:', selectError);
+        return null;
+    }
+
+    const newClicks = (current?.clicks ?? 0) + 1;
+
+    const { data, error: updateError } = await supabase
+        .from('shortUrl')
+        .update({ clicks: newClicks })
+        .eq('uuid', uuid)
+        .select();
+
+    if (updateError) {
+        console.error('Update error:', updateError);
+        return null;
+    }
+
+    return data[0];
+}
+
+
+/**
+ * Function deleteLinkSupabase
+ */
+export async function deleteLinkSupabase(uuid: string) {
+    const { data, error } = await supabase
+        .from('shortUrl')
+        .delete()
+        .eq('uuid', uuid)
+        .select();
+
+    if (error) {
+        console.error('Delete error:', error);
+        return null;
+    }
+
+    return data[0];
+}
+
+/**
+ * Function deleteLinkLocalStorage
+ */
+export function deleteLinkLocalStorage(uuid: string) {
+    const data = localStorage.getItem("localDataZyrl");
+    if (!data) return;
+
+    const parsedData = JSON.parse(data);
+    const newData = parsedData.filter((item: any) => item.uuid !== uuid);
+    localStorage.setItem("localDataZyrl", JSON.stringify(newData));
 }
