@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zyrl - URL Shortener
+
+![img](https://github.com/nnmadalin/zyrl/blob/main/public/logo.png?raw=true)
+
+Zyrl is a modern, fast, and scalable URL shortener built with Next.js. It allows users to create short, memorable links that redirect to longer URLs. The app uses **Supabase** as its backend for authentication and data storage and is optimized for deployment on **Vercel**.
+
+---
+
+## Features
+
+- Create short URLs easily
+- Track clicks and URL analytics 
+- Responsive design built with Next.js
+- Serverless deployment on Vercel for easy scaling
+
+---
+
+## Tech Stack
+
+- **Next.js** (React framework)
+- **Supabase** (PostgreSQL backend)
+- **Vercel** (Deployment platform)
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js (v16 or later recommended)
+- Supabase account and project
+- Vercel account
+
+---
+
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/zyrl.git
+cd zyrl
+```
+
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Setup Supabase
+Go to Supabase and create a new project.
+Create a table for storing URLs, for example:
+```sql
+CREATE TABLE shortUrl (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at timestamptz DEFAULT timezone('utc'::text, now()),
+  original_url text NOT NULL,
+  short_code text NOT NULL UNIQUE,
+  description text,
+  clicks int8 DEFAULT 0
+);
+```
+
+4. Configure environment variables
+Create `.env file` with:
+```env
+POSTGRES_URL="**********************"
+POSTGRES_USER="postgres"
+POSTGRES_HOST="**********************"
+SUPABASE_JWT_SECRET="u**********************"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="**********************"
+POSTGRES_PRISMA_URL="**********************"
+POSTGRES_PASSWORD="**********************"
+POSTGRES_DATABASE="postgres"
+SUPABASE_URL="h**********************"
+SUPABASE_ANON_KEY="**********************"
+NEXT_PUBLIC_SUPABASE_URL="**********************"
+SUPABASE_SERVICE_ROLE_KEY="**********************"
+POSTGRES_URL_NON_POOLING="**********************"
+NEXT_URL="https://localhost:3000"
+```
+Replace with your actual values.
+
+### Running Locally
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Open http://localhost:3000 to view.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Deployment on Vercel
+    1. Push your code to a Git repository.
+    2. Import your project on Vercel.
+    3. Add environment variables in the Vercel dashboard.
+    4. Deploy and access your live URL shortener.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### MIT License
+```
+Copyright (c) 2025 nnmadalin
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-## Learn More
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
